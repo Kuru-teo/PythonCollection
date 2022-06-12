@@ -1,0 +1,11 @@
+QLabel#Header{
+    font-family: Cast Iron Condensed;
+    font-size: 25px;
+    padding: 7px;
+    font-weight: bold 600;
+    color: #FFFFFF;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 2.5px;
+    border-color: #df4b45;
+}

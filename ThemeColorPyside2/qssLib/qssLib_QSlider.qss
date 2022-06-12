@@ -1,0 +1,46 @@
+
+QLabel {
+    color: rgb(255,255,255);
+    /*color: rgb(255,255,255);
+    font: Italic 14px;
+    border-style: solid;*/
+}
+QDoubleSpinBox {
+    color: rgb(255,255,255);
+    background-color: #777;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: rgb(200,200,200);
+    font: bold 14px;
+}
+QSlider:handle {
+    background: rgb(200,200,200);
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: rgb(255,255,255);
+    width:20px;
+    height: 20px;
+    margin:-4px 0px;
+}
+QSlider:handle:pressed{
+    background: rgb(200,50,50);
+}
+QSlider:groove {
+    background: rgb(70,70,70);
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 0px;
+    border-color: rgb(255,255,255);
+    position:absolute;
+    top:4px;
+    bottom:4px;
+}
+
+QSlider:add-page{
+    background: #777;
+}
+QSlider:sub-page{
+    background: rgb(170,170,170);
+}

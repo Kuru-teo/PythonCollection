@@ -1,0 +1,13 @@
+QGroupBox {
+    color: #FFFFFF;
+    border-radius: 10px;
+    margin-top: 6px;
+    font-size: 15px;
+    font-family: Cast Iron Condensed;
+    font-weight: bold 400;
+}
+QGroupBox::title{
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0px 5px 0px 5px;
+}
