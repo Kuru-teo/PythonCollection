@@ -1,0 +1,50 @@
+QListView {
+    color: #fff;
+    background-color: #de4a3e;
+    selection-background-color: #BF8845;
+    outline: none;
+    border-width: 5px;
+    border: solid #de4a3e;
+    border-radius: 3px;
+}
+ 
+QComboBox {
+    height: 25px;
+    color: #fff;
+    background-color: transparent;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #de4a3e;
+    border-radius: 6px;
+}
+QComboBox:on{
+    border: 3px solid #c2dbfe;
+}
+ 
+QLineEdit { 
+    color: #fff;
+}
+
+QListView::item {
+    color: #fff;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 5px;
+    height: 20px;
+    border-style: 1px solid;
+    border-radius: 3px;
+}
+QComboBox::drop-down {
+    image: url(":/icons/QComboBox/drop-arrow.png");
+    width: 8px;
+    height: 25px;
+    padding: 0px 8px;
+}
+ 
+QComboBox::drop-down:hover {
+    image: url(":/icons/QComboBox/drop-arrow_hover.png");
+}
+ 
+QComboBox::drop-down:on {
+    image: url(":/icons/QComboBox/drop-up-arrow.png");
+}
