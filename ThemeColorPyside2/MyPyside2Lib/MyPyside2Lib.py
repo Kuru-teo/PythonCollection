@@ -1,9 +1,6 @@
-from cmath import rect
-from distutils.log import debug
-import sys
+# -*- coding:utf-8 -*-
 import imp
-import os
-from MyPyside2Lib import imageResource
+from . import imageResource
 
 try:
     imp.find_module('PySide2')
@@ -101,11 +98,6 @@ class MessageBoxBase(QMessageBox):
 class ProgressDialogBase(QProgressDialog):
     def __init__(self, *args, **kwargs):
         super(ProgressDialogBase, self).__init__(*args, **kwargs)
-    """
-    def changeEvent(self, event):
-        super(ProgressDialogBase, self).changeEvent(event)
-        print("ooodddddddddddddddooooo")
-    """
 
 class AnimComboBox(QComboBox):
     def __init__(self, *args, **kwargs):
@@ -120,10 +112,11 @@ class FloatSlider(QAbstractSlider):
     labelName = ""
     min = 0.0
     max = 100.0
-    __boost = 1
 
     def __init__(self, *args, **kwargs):
         super(FloatSlider, self).__init__(*args, **kwargs)
+        #少数打消しのための倍率
+        self.__boost = 1
         #ラベル
         layout = QHBoxLayout(self)
         self.label = QLabel(self.labelName, self)
@@ -144,14 +137,13 @@ class FloatSlider(QAbstractSlider):
         self.__slider.sliderReleased.connect(self.released)
         self.__slider.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         layout.addWidget(self.__slider)
-        # SliderかSpinBox値が変われば実行し同期させる
+        #SliderかSpinBox値が変われば実行し同期させる
         self.__spinBox.valueChanged[float].connect(self.valueChangedCallback)
         self.__slider.valueChanged[int].connect(self.valueChangedCallback)
-
         #値範囲を指定
         self.setRange(float(self.min), float(self.max))
 
-    #各DCCツールでUndoのチャンク
+    #各DCCツールでUndoのチャンク(Slider用)
     def pressed(self):
         #cmds.undoInfo(openChunk=True)
         pass
@@ -160,51 +152,44 @@ class FloatSlider(QAbstractSlider):
         pass
 
     def valueChangedCallback(self, getValue):
-        #イベント発火のWidgetを返す
+        #イベント発火元のWidgetを返す
         sender = self.sender()
         if sender == self.__spinBox:
+            #少数を打ち消す倍率を適用してからシグナル放出
             self.__slider.blockSignals(True)
-            # 少数を打ち消す倍率を適用して、QSliderに値を設定する
             self.__slider.setValue(getValue * self.__boost)
             self.__slider.blockSignals(False)
 
         elif sender == self.__slider:
-            # 少数を打ち消す倍率を適用して、変数の値を上書きする
-            # 値を上書きするのは、カスタムのSignalをエミットする必要があるからです。
+            #少数を戻す倍率を適用してからシグナル放出
             getValue = float(getValue)/self.__boost
-
             self.__spinBox.blockSignals(True)
             self.__spinBox.setValue(getValue)
             self.__spinBox.blockSignals(False)
-
-            self.valueChanged.emit(getValue)
+            #self.valueChanged.emit(getValue)
 
     def getValue(self):
         return self.__spinBox.value()
 
     def setRange(self, min, max):
         self.__spinBox.setRange(min, max)
-        self.__updateSliderRange()  # 範囲が変更されたので、スライダーも更新する
+        self.__updateSliderRange()
 
+    #QsliderはintでQspinBoxはfloatのため、少数以下の桁数をsliderに足して見た目を合わせる。
+    #よって正しい値を保持しているのはQspinBox
+    #例)Qspinboxが50.35 → Qsliderは5035
     def __updateSliderRange(self):
         decimals = self.__spinBox.decimals()  # 少数点以下の桁数を取得
         minimum = self.__spinBox.minimum()  # 最小値を取得
         maximum = self.__spinBox.maximum()  # 最大値を取得
 
-        # 少数の桁数を使って、倍率を文字列で求めてintに変換する
-        # ＜decimalsが2の場合＞
-        # int('1'+('0'*2))は、int('1'+'00')→int('100')となる
-        # ＜decimalsが0の場合＞
-        # int('1'+('0'*0))は、int('1'+'')→int('1')となる
-        #
+        #少数打消しのための倍率を算出
         self.__boost = int('1'+('0'*decimals))
-
-        # QDoubleSpinBoxの範囲に、少数を打ち消す倍率を掛け算して設定する
-        # QDoubleSpinBoxの範囲が「0.00～99.99」の場合、
-        # QSliderの範囲は「0～9999」になる
+        #intで表現
         self.__slider.setRange(minimum*self.__boost, maximum*self.__boost)
 
-    def setValue2(self, val):  # 単純に値を受け取ってSetする。主にUI設定の読込時に使用
+    #setValueはQsliderとQspinBoxに既に存在
+    def setSpinValue(self, val):
         self.__spinBox.setValue(val)
 
 class PyToggle(QCheckBox):
@@ -219,7 +204,7 @@ class PyToggle(QCheckBox):
 
     #paintEventで設定したRectの範囲をクリックの範囲にする
     #仮想関数
-    def hitButton(self,pos:QPoint):   
+    def hitButton(self,pos):   
         return self.contentsRect().contains(pos)
     #仮想関数
     def paintEvent(self,event):
@@ -273,20 +258,3 @@ class DraggableButton(QPushButton):
         if self.__isDrag:
             self.move(self.mapToParent(event.pos() - self.__startPos))
         super(DraggableButton, self).mouseMoveEvent(event)
-        
-"""
-if __name__ == '__main__':
-    # Create the Qt Application
-    app = QApplication(sys.argv)
-    # Create and show the form
-    window = WindowBase()
-    window.resize(640, 360)
-
-    layout = QVBoxLayout(window)
-    button = DraggableButton('DraggableButton', window)
-    button.setFixedSize(128, 32)
-    layout.addWidget(button)
-    window.show()
-    # Run the main Qt loop
-    sys.exit(app.exec_())
-"""

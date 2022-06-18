@@ -1,12 +1,16 @@
 # -*- coding:utf-8 -*-
-
-from MyPyside2Lib.MyPyside2Lib import *
+import importlib
 import os
 import glob
 import time
+import sys
+
+from MyPyside2Lib import MyPyside2Lib
+importlib.reload(MyPyside2Lib)
+from MyPyside2Lib.MyPyside2Lib import *
 
 WindowObjName = "mm_test_window"
-folderPath = os.getcwd()
+folderPath = os.path.dirname(__file__)
 iniFileName = "UIsetting_MyPyside2"
 #colorDict = {"色":[MainColor,SubColor,BG_MainColor,BG_SubColor,GP_BorderColor]}
 colorDict = {"Green": ["#027373", "#038C7F", "#A9D9D0", "#F2E7DC", "#FFF9F5"],
@@ -66,7 +70,6 @@ class uiWidget(QWidget):
         #トグル
         self.toggleA = PyToggle()
         self.toggleA.setObjectName("mm_toggleA")
-        #self.buttonB.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         layB.addWidget(self.toggleA)
         layB.setAlignment(Qt.AlignHCenter)
 
@@ -122,7 +125,6 @@ class uiWidget(QWidget):
 
         #ラベル
         self.labelC = QLabel("C")
-        #self.labelC.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
         self.labelC.setAlignment(Qt.AlignCenter)
         layF.addWidget(self.labelC)
 
@@ -137,14 +139,12 @@ class uiWidget(QWidget):
         #レイアウト追加
         hboxB.addWidget(self.groupboxD)
         hboxB.addWidget(self.groupboxE)
-        #hboxB.addWidget(self.groupboxF)
 
         #----------四段目
         hboxC = QHBoxLayout()
         self.buttonD = QPushButton("Close")
         self.buttonD.setFixedHeight(20)
         self.buttonD.setObjectName("mm_button_close")
-        #self.buttonD.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         hboxC.addWidget(self.buttonD)
 
         #----------spacer
@@ -160,15 +160,13 @@ class uiWidget(QWidget):
         vboxA.addLayout(hboxB)
         vboxA.addSpacerItem(self.spaceB)
         vboxA.addLayout(hboxC)
-        #print(self.labelA.sizePolicy())
-        #print(hboxA.sizeHint())
-        #print(hboxC.geometry())
         #---------------------------自身widgetに親layoutを追加---------------------------
         self.setLayout(vboxA)
 
 class MainWindow(WindowBase):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+        #UI読み込み
         self.buildUI()
         #INIファイルの設定・読み込み
         self.iniFileSetting(folderPath,iniFileName)
@@ -179,7 +177,10 @@ class MainWindow(WindowBase):
         self.colorPreset = None
         self.colorPreset = list(colorDict.keys())[self.themeColor_cmb.currentIndex()]
         #Widgetの色上書き
-        self.setColor(self.colorPreset)
+        self.__setColor(self.colorPreset)
+        #Qssの読み込み(形状のみ。色はWdget自身のStyleSheetが優先される)
+        self.styleData = loadQSSFiles(folderPath)
+        self.setStyleSheet(self.styleData)
     
     def buildUI(self):
         #Window基本情報
@@ -197,49 +198,49 @@ class MainWindow(WindowBase):
         self.listLabel = self.getGuiWidgetByType(QLabel)
         self.listGroupBox = self.getGuiWidgetByType(QGroupBox)
         #各Widgetに関数を接続
-        self.setButtonGUI()
-        self.setComboboxGUI()
-        self.setCheckboxGUI()
-        self.setSliderGUI()
+        self.__setButtonGUI()
+        self.__setComboboxGUI()
+        self.__setCheckboxGUI()
+        self.__setSliderGUI()
     
     #---------------------------各Widgetに関数を接続---------------------------
     #各Wiggetと関数はWidgetのobjectNameで接続
-    def setButtonGUI(self):      
+    def __setButtonGUI(self):      
         for button in self.listButton:
             if button.objectName() == "mm_button_close":
                 button.clicked.connect(lambda: closeWindow(WindowObjName))
             if button.objectName() == "mm_button_message":
-                button.clicked.connect(lambda: self.showMessageBox("Message Box",False))
+                button.clicked.connect(lambda: self.__showMessageBox("Message Box",False))
             if button.objectName() == "mm_button_progress":
-                button.clicked.connect(self.showProgressDialog)
+                button.clicked.connect(self.__showProgressDialog)
     
-    def setComboboxGUI(self):
+    def __setComboboxGUI(self):
         for combobox in self.listCombobox:
             if combobox.objectName() == "mm_ComboBoxA":
-                combobox.currentIndexChanged[str].connect(self.setColor)
+                combobox.currentIndexChanged[str].connect(self.__setColor)
 
-    def setCheckboxGUI(self):
+    def __setCheckboxGUI(self):
         for checkbox in self.listCheckbox:
             if checkbox.objectName() == "mm_toggleA":
                 checkbox.stateChanged.connect(
                     lambda: self.__setNightMode(checkbox))
 
-    def setSliderGUI(self):
+    def __setSliderGUI(self):
         for slider in self.listSlider:
             if slider.objectName() == "mm_SliderA":
-                slider.valueChanged.connect(self.setColorValue)
-
+                slider.valueChanged.connect(self.__setColorValue)
+    
+    #自身Widgetの中に含まれるwidgetをtype指定で取得
     def getGuiWidgetByType(self, type):
         ui_name_list = []
-        #自身Widgetの中に含まれるwidgetをtype指定で取得
         listWidgets = self.findChildren(type)
         for widget in listWidgets:
             ui_name_list.append(widget.objectName())
         return listWidgets
 
     #---------------------------色替え部分の指定---------------------------
-    #ウィンドウはQPainterのsetBrush(self.gradient)で色付けしている前提
-    def setWindowColor(self,colList,win):
+    #ウィンドウ系はQPainterのsetBrush(self.gradient)で色付けしている前提
+    def __setWindowColor(self,colList,win):
         win.gradient = QLinearGradient(
             QRectF(win.rect()).bottomLeft(), QRectF(win.rect()).topLeft())
         win.gradient.setColorAt(1.0, colList[2])
@@ -271,7 +272,7 @@ class MainWindow(WindowBase):
     def setComboboxColor(self, colList):
         col = """QComboBox{ border-color: %s;}
                  QComboBox{ background-color: %s;}
-                 QComboBox QAbstractItemView { background-color: %s;
+                 QListView { background-color: %s;
                  selection-background-color: %s;}""" % (
             colList[0], colList[2], colList[2], colList[1])
         for combobox in self.listCombobox:
@@ -294,28 +295,27 @@ class MainWindow(WindowBase):
 
     #---------------------------Widgetに紐づける関数---------------------------
     #自身Widget内の各ウィジェットを色替え
-    def setColor(self, colorPreset):
+    def __setColor(self, colorPreset):
         self.setButtonColor(colorDict[colorPreset])
         self.setLabelColor(colorDict[colorPreset])
         self.setComboboxColor(colorDict[colorPreset])
         self.setSliderColor(colorDict[colorPreset])
         self.setToggleColor(colorDict[colorPreset])
         self.setGroupColor(colorDict[colorPreset])
-        self.setWindowColor(colorDict[colorPreset],self)
+        self.__setWindowColor(colorDict[colorPreset],self)
         self.update()
         self.colorPreset = colorPreset
     
-    def setColorValue(self,signal):
+    def __setColorValue(self,signal):
         pass
-        #print(signal)
 
     def __setNightMode(self,toggle):
         if toggle.isChecked():
-            self.setColor("night")
+            self.__setColor("night")
             self.themeColor_cmb.setEnabled(False)
         else:
             self.themeColor_cmb.setEnabled(True)
-            self.setColor(self.themeColor_cmb.currentText())
+            self.__setColor(self.themeColor_cmb.currentText())
     
     #---------------------------初期設定関連---------------------------
     def iniFileSetting(self,DirPath,fileName):
@@ -332,20 +332,25 @@ class MainWindow(WindowBase):
             self.cWidget.comboboxA.setCurrentIndex(int(self.iniFile.value
             (self.cWidget.comboboxA.objectName())))
             self.restoreGeometry(self.iniFile.value("geometry"))
-        except:
-            pass
+         #Pyside2 version5.12.5 のエラー→PySide2.QtCore.QSettings.valueは、値が0の場合にNoneを返す
+         #INIファイルがない場合＋上記エラーの対応
+        except TypeError:
+            self.cWidget.comboboxA.setCurrentIndex(0)
+            #restoreGeo は INIファイルがなくても使用できる(?)
+            self.restoreGeometry(self.iniFile.value("geometry"))
     
     #---------------------------ダイアログ---------------------------
-    def showMessageBox(self,text,accept:bool):
+    def __showMessageBox(self,text,accept):
         msgBox = MessageBoxBase()
         msgBox.setText(text)
+        msgBox.setStyleSheet(self.styleData)
         if not accept:
             yesButton = msgBox.addButton(QMessageBox.Yes)
             noButton = msgBox.addButton(QMessageBox.No)     
-        self.setWindowColor(colorDict[self.colorPreset],msgBox)
+        self.__setWindowColor(colorDict[self.colorPreset],msgBox)
         msgBox.exec_()
     
-    def showProgressDialog(self):
+    def __showProgressDialog(self):
         max = 100
         cancelflag = False
         progressDialog = ProgressDialogBase(
@@ -365,7 +370,7 @@ class MainWindow(WindowBase):
             progressDialog.setLabelText("Progress... %d %%" % count)
             time.sleep(0.01)
         if cancelflag == False:
-            self.showMessageBox("Finish Process", True)
+            self.__showMessageBox("Finish Process", True)
 
     #---------------------------仮想関数---------------------------
     def closeEvent(self, event):
@@ -396,20 +401,10 @@ def loadQSSFiles(folderDir):
         style = ""
 
 #---------------------------以下DCCツールごとのルールに沿って編集---------------------------
-def main(cur):
-    #closeWindow(cur)
-    #mayaWindow =  shiboken2.wrapInstance(long(OpenMayaUI.MQtUtil.mainWindow()), QWidget)
-    #winA = MainWindow(mayaWindow)
-    #winA = MainWindow()
-    #winA.show()
-    pass
-
+#デスクトップアプリケーションの場合
 if __name__ == '__main__':
     # Create the Qt Application
     app = QApplication(sys.argv)
-    # load qss files
-    style = loadQSSFiles(folderPath)
-    app.setStyleSheet(style)
     # close window
     closeWindow(WindowObjName)
     # Create and show the form
