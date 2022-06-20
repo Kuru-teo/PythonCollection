@@ -1,12 +1,16 @@
 # -*- coding:utf-8 -*-
-import importlib
 import os
 import glob
 import time
 import sys
 
 from MyPyside2Lib import MyPyside2Lib
-importlib.reload(MyPyside2Lib)
+try:
+    import importlib
+    importlib.reload(MyPyside2Lib)
+except:
+    #python2.x系対応
+    reload(MyPyside2Lib)
 from MyPyside2Lib.MyPyside2Lib import *
 
 WindowObjName = "mm_test_window"
@@ -193,6 +197,7 @@ class MainWindow(WindowBase):
         #各Widgetのリスト
         self.listButton = self.getGuiWidgetByType(QPushButton)
         self.listCombobox = self.getGuiWidgetByType(QComboBox)
+        self.listListView = self.getGuiWidgetByType(QListView)
         self.listCheckbox = self.getGuiWidgetByType(QCheckBox)
         self.listSlider = self.getGuiWidgetByType(QAbstractSlider)
         self.listLabel = self.getGuiWidgetByType(QLabel)
@@ -273,10 +278,13 @@ class MainWindow(WindowBase):
         col = """QComboBox{ border-color: %s;}
                  QComboBox{ background-color: %s;}
                  QListView { background-color: %s;
-                 selection-background-color: %s;}""" % (
+                 selection-background-color: %s;
+                 color: #fff}""" % (
             colList[0], colList[2], colList[2], colList[1])
         for combobox in self.listCombobox:
             combobox.setStyleSheet(col)
+        for listView in self.listListView:
+            listView.setStyleSheet(col)
 
     def setSliderColor(self, colList):
         col = """QSlider:handle {background: %s;}
@@ -374,7 +382,7 @@ class MainWindow(WindowBase):
 
     #---------------------------仮想関数---------------------------
     def closeEvent(self, event):
-        super(MainWindow, self).closeEvent(event)
+        #super(MainWindow, self).closeEvent(event)
         self.saveSettings()
 
 #---------------------------汎用関数---------------------------
@@ -413,6 +421,15 @@ if __name__ == '__main__':
     # Run the main Qt loop
     sys.exit(app.exec_())
 
-
-
-
+#mayaの場合
+"""
+def MY_Example():
+    global Example_UI_ex
+    app = QApplication.instance()
+    closeWindow(WindowObjName)
+    Example_UI_ex = MainWindow(parent)
+    #Example_UI(Example_UI_ex)
+    Example_UI_ex.show()
+    sys.exit()
+    app.exec_()
+"""
