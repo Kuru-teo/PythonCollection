@@ -5,6 +5,9 @@ QLabel {
     font: Italic 14px;
     border-style: solid;*/
 }
+QSlider {
+    background-color: transparent;
+}
 QDoubleSpinBox {
     color: rgb(255,255,255);
     background-color: #777;

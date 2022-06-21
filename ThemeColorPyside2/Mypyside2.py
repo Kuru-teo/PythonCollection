@@ -13,6 +13,30 @@ except:
     reload(MyPyside2Lib)
 from MyPyside2Lib.MyPyside2Lib import *
 
+#---------------------------mayaのTopWindow取得---------------------------
+"""
+import maya.cmds as cmds
+from maya import OpenMayaUI
+try:
+   import shiboken
+except:
+   import shiboken2 as shiboken
+
+ptr = OpenMayaUI.MQtUtil.mainWindow()
+parent = shiboken.wrapInstance(long(ptr), QWidget)
+"""
+
+#--------------------------substance painterのTopWindow取得---------------
+"""
+import substance_painter.ui
+import substance_painter.export
+import substance_painter.project
+import substance_painter.textureset
+parent = substance_painter.ui.get_main_window()
+plugin_widgets = []
+"""
+
+#--------------------------基本情報-------------------------------------
 WindowObjName = "mm_test_window"
 folderPath = os.path.dirname(__file__)
 iniFileName = "UIsetting_MyPyside2"
@@ -296,8 +320,8 @@ class MainWindow(WindowBase):
 
     def setGroupColor(self, colList):
         #色のみ指定の方法がない?
-        col = """QGroupBox{border: 3px solid %s;
-                 color: %s}""" % (colList[4], colList[4])
+        col = """QGroupBox{border: 3px solid %s;}
+                 QGroupBox::title{color: %s;}""" % (colList[4], colList[4])
         for groupbox in self.listGroupBox:
             groupbox.setStyleSheet(col)
 
@@ -432,4 +456,36 @@ def MY_Example():
     Example_UI_ex.show()
     sys.exit()
     app.exec_()
+"""
+#substance painterの場合
+# ※Substance Painterでは __init__.pyから start_plugin()を呼び出す必要あり
+# ※その他Substance Painterでは paintEvent()周りで不具合あります。
+#Substanceの場合
+"""
+def MY_Example():
+    Example_UI_ex = MainWindow(parent)
+    Example_UI_ex.show()
+
+
+def start_plugin():
+	# Create a text widget for a menu
+	Action = QAction("MyPyside", triggered=MY_Example)
+
+	# Add this widget to the existing File menu of the application
+	substance_painter.ui.add_action(
+	    substance_painter.ui.ApplicationMenu.File, Action)
+
+	# Store the widget for proper cleanup later when stopping the plugin
+	plugin_widgets.append(Action)
+
+
+def close_plugin():
+    closeWindow(WindowObjName)
+    for widget in plugin_widgets:
+        substance_painter.ui.delete_ui_element(widget)
+    plugin_widgets.clear()
+
+
+if __name__ == '__main__':
+    start_plugin()
 """
