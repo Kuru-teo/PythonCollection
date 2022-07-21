@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
         self.shaderPathList,self.shaderNameList = loadMaterialFiles(folderPath)
         self.targetMatList = []
         self.targetMeshList =[]
-        self.rs = None
+        self.rs = renderSetup.instance()
         self.visiable = True
 
         #UI読み込み
@@ -208,11 +208,11 @@ class MainWindow(QMainWindow):
         #各Widgetのリスト
         self.listButton = self.getGuiWidgetByType(QPushButton)
         self.listCombobox = self.getGuiWidgetByType(QComboBox)
-        self.listListView = self.getGuiWidgetByType(QListView)
-        self.listCheckbox = self.getGuiWidgetByType(QCheckBox)
-        self.listSlider = self.getGuiWidgetByType(QAbstractSlider)
-        self.listLabel = self.getGuiWidgetByType(QLabel)
-        self.listGroupBox = self.getGuiWidgetByType(QGroupBox)
+        #self.listListView = self.getGuiWidgetByType(QListView)
+        #self.listCheckbox = self.getGuiWidgetByType(QCheckBox)
+        #self.listSlider = self.getGuiWidgetByType(QAbstractSlider)
+        #self.listLabel = self.getGuiWidgetByType(QLabel)
+        #self.listGroupBox = self.getGuiWidgetByType(QGroupBox)
         self.listListWidgetWithButton = self.getGuiWidgetByType(listWidgetWithButton)
         self.listListWidget = self.getGuiWidgetByType(QListWidget)
         #各Widgetに関数を接続
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
     def __setButtonGUI(self):      
         for button in self.listButton:
             if button.objectName() == "mm_button_close":
-                button.clicked.connect(lambda: closeWindow(WindowObjName))
+                button.clicked.connect(self.resetTool)
             if button.objectName() == "mm_render_setup":
                 button.clicked.connect(self.__renderSetup)
             if button.objectName() == "mm_override_material":
@@ -297,8 +297,15 @@ class MainWindow(QMainWindow):
             else:
                 print(ErrorMessage_NoTargetList)
                 return
+        #マテリアル作成
+        self.clearMaterial()
         self.createMaterial(self.shaderPathList[self.currentShaderIndex])
-        self.rs = renderSetup.instance()
+        
+        #レイヤーの作成
+        self.clearRenderSetupLayer()
+        CMLayer = self.rs.createRenderLayer(rsLayerName)
+        #レイヤーのレンダリング設定
+        self.rs.switchToLayer(CMLayer)
 
     def __switchMaterial(self,button):
         self.visiable = bool(1 - int(self.visiable))
@@ -306,17 +313,32 @@ class MainWindow(QMainWindow):
 
     def resetTool(self):
         #ツール関連のマテリアルを消す
+        self.clearMaterial()
+        #ツール関連のレイヤー消す
+        self.clearRenderSetupLayer()
+        #ListWidgetを消す
+        self.clearListWidget()
+        #可視ボタンをTrueにする
+
+    def clearMaterial(self):
         allMaterials = cmds.ls(mat=True)
         for mat in allMaterials:
-            if mat == self.shaderNameList:
+            if mat in self.shaderNameList:
+                connectNode = cmds.listConnections(mat,d=False)
                 cmds.delete(mat)
-        #ツール関連のレイヤー消す
+                cmds.delete(mat+"SG")
+                for node in connectNode:
+                    cmds.delete(node)
+    
+    def clearRenderSetupLayer(self):
         layers = self.rs.getRenderLayers()
         for layer in layers:
-            if layer == rsLayerName:
+            if rsLayerName in layer.name():
                 renderLayer.delete(layer)
-        #ListWidgetを消す
-        #可視ボタンをTrueにする
+    
+    def clearListWidget(self):
+        for lw in self.listListWidget:
+            lw.clear()
 
     #マテリアル名はshaderファイル名です
     def createMaterial(self,shaderPath):
@@ -324,10 +346,8 @@ class MainWindow(QMainWindow):
         name = os.path.splitext(nameBase)[0]
         shaderNode = cmds.shadingNode(materialNodeType, name=name, asShader=True)
         cmds.sets(name="%sSG" %shaderNode, empty=True, renderable=True, noSurfaceShader=True)
-        print(shaderNode)
         cmds.setAttr("%s.shader" % shaderNode, shaderPath, type="string")
         cmds.connectAttr("%s.outColor" % shaderNode, "%sSG.surfaceShader" % shaderNode)
-        pass
 
     def checkExistsWidgetList(self,widgetList):
         if widgetList.count() == 0:
@@ -374,9 +394,12 @@ def getNodeHierarchyList(type):
     ##選択階層以下のジオメトリの指定ノードを取得
     cmds.select(hi=True)
     nodes = cmds.ls(sl=True, type=type, tr=True)
-    for node in nodes:
-        if cmds.nodeType(node) != type:
+    for node in nodes[:]:
+        if cmds.nodeType(node) in type:
+            pass
+        else:
             nodes.remove(node)
+    cmds.select(nodes)
     return nodes
 
 def closeWindow(wname):
