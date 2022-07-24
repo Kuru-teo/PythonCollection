@@ -30,7 +30,7 @@ VS_TO_PS VS(VS_INPUT In)
 // （５）ピクセルシェーダーの処理を作るところ
 float4 PS(VS_TO_PS_frag In) : SV_Target
 {
-    return (In.vFace > 0 ) ? float4(1.0, 0.0, 0.0, 1.0) : float4(0.0, 1.0, 0.0, 1.0);
+    return (In.vFace > 0 ) ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 0.0, 0.0, 1.0);
     //return float4(1.0, 0.0, 0.0, 1.0);
 }
 
