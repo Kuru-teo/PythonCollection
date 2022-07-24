@@ -275,7 +275,6 @@ class listWidgetWithButton(QWidget):
     def emitButtonSignal(args):
         pass
         
-        
 class DraggableButton(QPushButton):
     def __init__(self, *args, **kwargs):
         super(DraggableButton, self).__init__(*args, **kwargs)
@@ -293,3 +292,9 @@ class DraggableButton(QPushButton):
         if self.__isDrag:
             self.move(self.mapToParent(event.pos() - self.__startPos))
         super(DraggableButton, self).mouseMoveEvent(event)
+
+class HorizontalLine(QFrame):
+    def __init__(self, *args, **kwargs):
+        super(HorizontalLine, self).__init__(*args, **kwargs)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)

@@ -1,12 +1,7 @@
 # -*- coding:utf-8 -*-
-from fileinput import filename
-from operator import itemgetter
 import os
 import glob
-import time
 import sys
-from turtle import st
-from unicodedata import name
 
 from .MyPyside2Lib import MyPyside2Lib
 try:
@@ -35,12 +30,11 @@ folderPath = os.path.dirname(__file__)
 iniFileName = "UIsetting_ChangeMatByRenderSetUp"
 
 #render setupに加えるレイヤー名
-rsLayerName = "mmChangeMatLayer"
-
-#作成するマテリアルのshadertype hlslかglslか等
+rsLayerName = "mm_ChangeMatLayer"
+#作成するマテリアルのshadertype hlslかglsl等
 materialNodeType = "dx11Shader"
 #override対象のマテリアルのshadertype
-overMaterialNodeType =["lambert","phong","standardSurface"]
+overMaterialNodeType =["lambert","phong"]
 
 #エラーメッセージ集
 ErrorMessage_NoOverrrideMat = ""
@@ -57,17 +51,13 @@ class uiWidget(QWidget):
         #----------1段目
         hboxTitle = QHBoxLayout()
         vboxTitle = QVBoxLayout()
-        #タイトル
-        self.labelTitle = QLabel("ああああああ説明説明\n おえおえおえおえお")
-        self.labelTitle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.labelTitle.setAlignment( Qt.AlignCenter)
-        self.labelTitle.setObjectName("Header")
-        vboxTitle.addWidget(self.labelTitle)
-        vboxTitle.setAlignment(Qt.AlignHCenter)
+        
+        self.Hborder = HorizontalLine()
+        self.Hborder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        vboxTitle.addWidget(self.Hborder)
 
         #レイアウト追加
         hboxTitle.addLayout(vboxTitle)
-        hboxTitle.setAlignment(Qt.AlignHCenter)
 
         #----------2段目
         hboxA = QHBoxLayout()
@@ -159,7 +149,6 @@ class uiWidget(QWidget):
 
         #----------spacer
         self.spaceA = QSpacerItem(0, 40, QSizePolicy.Fixed, QSizePolicy.Fixed)
-        #self.spaceB = QSpacerItem(0, 20, QSizePolicy.Expanding)
         
         #---------------------------親layoutに子layoutを追加---------------------------
         vParentBox = QVBoxLayout()
@@ -183,6 +172,7 @@ class MainWindow(QMainWindow):
         self.targetMeshList =[]
         self.rs = renderSetup.instance()
         self.visiable = True
+        self.setWindowFlags(Qt.Dialog)
 
         #UI読み込み
         self.buildUI()
@@ -191,7 +181,6 @@ class MainWindow(QMainWindow):
         #INIファイルの設定・読み込み
         self.iniFileSetting(folderPath,iniFileName)
         self.loadSettings()
-
         #現在comboboxで選択されているshader
         self.currentShaderIndex = self.cWidget.comboboxA.currentIndex()
 
@@ -208,19 +197,12 @@ class MainWindow(QMainWindow):
         #各Widgetのリスト
         self.listButton = self.getGuiWidgetByType(QPushButton)
         self.listCombobox = self.getGuiWidgetByType(QComboBox)
-        #self.listListView = self.getGuiWidgetByType(QListView)
-        #self.listCheckbox = self.getGuiWidgetByType(QCheckBox)
-        #self.listSlider = self.getGuiWidgetByType(QAbstractSlider)
-        #self.listLabel = self.getGuiWidgetByType(QLabel)
-        #self.listGroupBox = self.getGuiWidgetByType(QGroupBox)
         self.listListWidgetWithButton = self.getGuiWidgetByType(listWidgetWithButton)
         self.listListWidget = self.getGuiWidgetByType(QListWidget)
         #各Widgetに関数を接続
         self.__setButtonGUI()
         self.__setComboboxGUI()
         self.__setlistWidgetWithButtonGUI()
-        #self.__setCheckboxGUI()
-        #self.__setSliderGUI()
     
     #---------------------------各Widgetに関数を接続---------------------------
     #各Wiggetと関数はWidgetのobjectNameで接続
@@ -281,7 +263,6 @@ class MainWindow(QMainWindow):
                     if len(items) != 0:
                         continue
                     listWidget.addItem(geo)
-
         #deleteButtonの処理
         if isAdd == False:
             row = None
@@ -297,28 +278,72 @@ class MainWindow(QMainWindow):
             else:
                 print(ErrorMessage_NoTargetList)
                 return
-        #マテリアル作成
-        self.clearMaterial()
-        self.createMaterial(self.shaderPathList[self.currentShaderIndex])
         
-        #レイヤーの作成
         self.clearRenderSetupLayer()
+        self.clearMaterial()
+
+        #マテリアル作成
+        self.createMaterial(self.shaderPathList[self.currentShaderIndex])     
+        #インスタンスの再取得
+        self.rs = renderSetup.instance()
+        #レイヤーの作成
         CMLayer = self.rs.createRenderLayer(rsLayerName)
+        #コレクションの作成
+        transCollect = CMLayer.createCollection('mm_transform')
+        shaderCollect = CMLayer.createCollection('mm_shader')
+        #セレクターの作成
+        transSelector = transCollect.getSelector()
+        transSelector.setFilterType(selector.Filters.kTransforms)
+        shaderSelector = shaderCollect.getSelector()
+        shaderSelector.setFilterType(selector.Filters.kShadingEngines)
+        #コレクションに要素の追加
+        for lwb in self.listListWidgetWithButton:
+            if "transform" in lwb.nodeType:
+                for i in range(0,lwb.listWidget.count()):
+                    item =[]
+                    item.append(lwb.listWidget.item(i).text())
+                    transSelector.staticSelection.add(item)
+            if "lambert" in lwb.nodeType:
+                for i in range(0, lwb.listWidget.count()):
+                    item = []
+                    itemName = lwb.listWidget.item(i).text()
+                    #lambert1のみshadingEngineの名前が固定のため分岐
+                    if itemName == "lambert1":
+                        item.append("initialShadingGroup")
+                    else:
+                        item.append(lwb.listWidget.item(i).text()+"SG")
+                    shaderSelector.staticSelection.add(item)
+        #shderOverrideの作成
+        override = shaderCollect.createOverride(
+           self.shaderNameList[self.currentShaderIndex]+"SG", typeIDs.shaderOverride)
+        override.setShader(
+            self.shaderNameList[self.currentShaderIndex], '.outColor')
+
         #レイヤーのレンダリング設定
         self.rs.switchToLayer(CMLayer)
 
     def __switchMaterial(self,button):
         self.visiable = bool(1 - int(self.visiable))
         button.setText("switch material: {}".format(str(self.visiable)))
+        #レイヤーを取得しにいく
+        try:
+            CMLayer = self.rs.getRenderLayer(rsLayerName)
+        except:
+            CMLayer =None
+        
+        if CMLayer != None:
+            if self.visiable:
+                self.rs.switchToLayer(CMLayer)
+            else:
+                self.rs.switchToLayer(self.rs.getDefaultRenderLayer())
 
     def resetTool(self):
-        #ツール関連のマテリアルを消す
-        self.clearMaterial()
         #ツール関連のレイヤー消す
         self.clearRenderSetupLayer()
+        #ツール関連のマテリアルを消す
+        self.clearMaterial()
         #ListWidgetを消す
         self.clearListWidget()
-        #可視ボタンをTrueにする
 
     def clearMaterial(self):
         allMaterials = cmds.ls(mat=True)
@@ -327,10 +352,13 @@ class MainWindow(QMainWindow):
                 connectNode = cmds.listConnections(mat,d=False)
                 cmds.delete(mat)
                 cmds.delete(mat+"SG")
-                for node in connectNode:
-                    cmds.delete(node)
+                #Shaderノードに接続されているノードも削除
+                if connectNode != None:
+                    for node in connectNode:
+                        cmds.delete(node)
     
     def clearRenderSetupLayer(self):
+        self.rs = renderSetup.instance()
         layers = self.rs.getRenderLayers()
         for layer in layers:
             if rsLayerName in layer.name():
