@@ -112,7 +112,7 @@ class uiWidget(QWidget):
         hboxD = QHBoxLayout()
         layE = QHBoxLayout()
         #ボタン
-        self.buttonC = DraggableButton("render setup")
+        self.buttonC = QPushButton("render setup")
         self.buttonC.setObjectName("mm_render_setup")
         self.buttonC.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         layE.addWidget(self.buttonC)
@@ -128,7 +128,7 @@ class uiWidget(QWidget):
         hboxE = QHBoxLayout()
         layD = QHBoxLayout()
         #ボタン
-        self.buttonE = DraggableButton("switch material : True")
+        self.buttonE = QPushButton("switch material : True")
         self.buttonE.setObjectName("mm_override_material")
         self.buttonE.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         layD.addWidget(self.buttonE)
