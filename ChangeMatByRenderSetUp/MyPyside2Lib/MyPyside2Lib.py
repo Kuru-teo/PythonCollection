@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 import imp
-from . import imageResource
 
 try:
     imp.find_module('PySide2')

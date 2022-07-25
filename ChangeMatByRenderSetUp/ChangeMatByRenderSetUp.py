@@ -143,7 +143,7 @@ class uiWidget(QWidget):
         #----------7段目
         hboxF = QHBoxLayout()
         self.buttonD = QPushButton("RESET")
-        self.buttonD.setFixedHeight(20)
+        #self.buttonD.setFixedHeight(50)
         self.buttonD.setObjectName("mm_button_close")
         hboxF.addWidget(self.buttonD)
 
@@ -307,11 +307,12 @@ class MainWindow(QMainWindow):
                 for i in range(0, lwb.listWidget.count()):
                     item = []
                     itemName = lwb.listWidget.item(i).text()
+                    SGNode = cmds.listConnections(itemName,s=False,t="shadingEngine")
                     #lambert1のみshadingEngineの名前が固定のため分岐
                     if itemName == "lambert1":
                         item.append("initialShadingGroup")
                     else:
-                        item.append(lwb.listWidget.item(i).text()+"SG")
+                        item.append(SGNode[0])
                     shaderSelector.staticSelection.add(item)
         #shderOverrideの作成
         override = shaderCollect.createOverride(
