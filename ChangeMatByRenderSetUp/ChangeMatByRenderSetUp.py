@@ -34,7 +34,7 @@ rsLayerName = "mm_ChangeMatLayer"
 #作成するマテリアルのshadertype hlslかglsl等
 materialNodeType = "dx11Shader"
 #override対象のマテリアルのshadertype
-overMaterialNodeType =["lambert","phong"]
+overMaterialNodeType =["lambert","phong","blinn"]
 
 #エラーメッセージ集
 ErrorMessage_NoOverrrideMat = ""
