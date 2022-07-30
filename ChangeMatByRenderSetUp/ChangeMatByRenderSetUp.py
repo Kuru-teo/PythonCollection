@@ -301,19 +301,25 @@ class MainWindow(QMainWindow):
             if "transform" in lwb.nodeType:
                 for i in range(0,lwb.listWidget.count()):
                     item =[]
-                    item.append(lwb.listWidget.item(i).text())
-                    transSelector.staticSelection.add(item)
+                    try:
+                        item.append(lwb.listWidget.item(i).text())
+                        transSelector.staticSelection.add(item)
+                    except:
+                        print("["+str(lwb.listWidget.item(i).text())+"]can not find")
             if "lambert" in lwb.nodeType:
                 for i in range(0, lwb.listWidget.count()):
                     item = []
-                    itemName = lwb.listWidget.item(i).text()
-                    SGNode = cmds.listConnections(itemName,s=False,t="shadingEngine")
-                    #lambert1のみshadingEngineの名前が固定のため分岐
-                    if itemName == "lambert1":
-                        item.append("initialShadingGroup")
-                    else:
-                        item.append(SGNode[0])
-                    shaderSelector.staticSelection.add(item)
+                    try:
+                        itemName = lwb.listWidget.item(i).text()
+                        SGNode = cmds.listConnections(itemName,s=False,t="shadingEngine")
+                        #lambert1のみshadingEngineの名前が固定のため分岐
+                        if itemName == "lambert1":
+                            item.append("initialShadingGroup")
+                        else:
+                            item.append(SGNode[0])
+                        shaderSelector.staticSelection.add(item)
+                    except:
+                        print("["+str(lwb.listWidget.item(i).text())+"]can not find")
         #shderOverrideの作成
         override = shaderCollect.createOverride(
            self.shaderNameList[self.currentShaderIndex]+"SG", typeIDs.shaderOverride)
