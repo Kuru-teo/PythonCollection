@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------
-# @file     : mm_script_loopCheckUI.py
-# @brief    : 
-# @auther   : 諸星 岬
-# @note     : 
-#------------------------------------------
 from maya import OpenMayaUI
 
 import os
@@ -149,19 +143,13 @@ class MainWindow(QMainWindow):
 
     def saveSettings(self):
         self.iniFile.setValue("geometry", self.saveGeometry())
-        #self.iniFile.setValue(self.qlineA.objectName(), self.qlineA.text())
     
     def loadSettings(self):
-        try:
-            # if self.iniFile.value(self.qlineA.objectName()) == None:
-            #     self.qlineA.setText("Test")
-            # else:
-            #     self.qlineA.setText(self.iniFile.value(self.qlineA.objectName()))            
+        try:           
             self.restoreGeometry(self.iniFile.value("geometry"))
         #Pyside2 version5.12.5 のエラー→PySide2.QtCore.QSettings.valueは、値が0の場合にNoneを返す
         # #INIファイルがない場合＋上記エラーの対応
         except TypeError:
-            # self.qlineA.setText("Test")
             #restoreGeo は INIファイルがなくても使用できる(?)
             self.restoreGeometry(self.iniFile.value("geometry"))
 
