@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------
-# @file     : mm_script_loopCheck.py
-# @brief    : 
-# @auther   : 諸星 岬
-# @note     : 
-#------------------------------------------
-from imp import reload
 import maya.cmds as cmds
 import maya.mel as mel
 
 import os
 import glob
-
-import Test03
-reload(Test03)
 
 class LoopCheckClass(object):
     def __init__(self):
@@ -71,7 +61,7 @@ class LoopCheckClass(object):
         cmds.file( new=True)
 
 def check_function():
-    Test03.main()
+    pass
 
 #ディレクトリがなければ作成
 def check_dir(path):
